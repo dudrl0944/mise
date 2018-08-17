@@ -97,9 +97,14 @@ void ledAction() {
     return;
   }
 
+ digitalWrite(B_pin, B);
+ digitalWrite(R_pin, R);
+ digitalWrite(G_pin, G);
+ /* 
   analogWrite(B_pin, B);
   analogWrite(R_pin, R);
   analogWrite(G_pin, G);
+  */
 }
 
 void CallDHT11() {
