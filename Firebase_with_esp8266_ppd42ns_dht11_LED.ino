@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
 #include <FirebaseArduino.h>
 #include <DHT11.h>
 
@@ -8,6 +9,9 @@
 #define WIFI_SSID "KTEgg145"
 #define WIFI_PASSWORD "kaii1357!!i"
 #define DHT11_Delay 5000
+
+//set ESP8266
+ESP8266WiFiMulti wifiMulti;
 
 //전역변수 선언
 //ppd42ns
@@ -53,20 +57,21 @@ void setup() {
   pinMode(G_pin, OUTPUT);
 
   // connect to wifi.
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("connecting");
-  Serial.print(WIFI_SSID); Serial.println(" ...");
+  wifiMulti.addAP("KTEgg145", "kaii1357!!i");   // add Wi-Fi networks you want to connect to
+  wifiMulti.addAP("iPhone", "kaii1357");
+
+  Serial.println("Connecting ...");
 
   int i = 0;
-  while (WiFi.status() != WL_CONNECTED) {
+  while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
     delay(1000);
-    Serial.print(++i); Serial.print(' ');
+    Serial.print('.');
   }
-
   Serial.println('\n');
-  Serial.println("Connection established!");
+  Serial.print("Connected to ");
+  Serial.println(WiFi.SSID());              // Tell us what network we're connected to
   Serial.print("IP address:\t");
-  Serial.println(WiFi.localIP());
+  Serial.println(WiFi.localIP());           // Send the IP address of the ESP8266 to the computer
 
 
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
@@ -97,13 +102,13 @@ void ledAction() {
     return;
   }
 
- digitalWrite(B_pin, B);
- digitalWrite(R_pin, R);
- digitalWrite(G_pin, G);
- /* 
-  analogWrite(B_pin, B);
-  analogWrite(R_pin, R);
-  analogWrite(G_pin, G);
+  digitalWrite(B_pin, B);
+  digitalWrite(R_pin, R);
+  digitalWrite(G_pin, G);
+  /*
+    analogWrite(B_pin, B);
+    analogWrite(R_pin, R);
+    analogWrite(G_pin, G);
   */
 }
 
