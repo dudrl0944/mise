@@ -2,6 +2,7 @@ const request = require('request');
 const xml2js = require('xml2js');
 var parser = new xml2js.Parser();
 var firebase = require("firebase");
+
 var isTrue = 1;
 var DB_dataTime;
 //파이어베이스 설정
@@ -11,6 +12,12 @@ var config = {
   databaseURL: "mise-3795b.firebaseio.com",
 };
 firebase.initializeApp(config);
+
+
+//스케줄링
+var schedule = require('node-schedule');
+var rule = new schedule.RecurrenceRule();
+rule.minute = 1; // 매시간 실행
 
 const url = 'http://openapi.airkorea.or.kr/openapi/services/rest/ArpltnInforInqireSvc/getCtprvnMesureSidoLIst';
 let queryParams = `?${encodeURIComponent('ServiceKey')}=LhiHR3TDCO1P1Fr7QlCRft%2BkxQAf8E30H9xqobFBn3L7Q1cy0oJNW9RIbKwpZonnXNmp%2BhS%2Fb8laIe5G%2B0Algw%3D%3D`; /* Service Key */
@@ -22,9 +29,9 @@ queryParams += `&${encodeURIComponent('numOfRows')}=${encodeURIComponent('16')}`
 
 
   try{
-    setInterval(function(){
-        get_api();
-    }, 10000)
+    var j = schedule.scheduleJob(rule, function(){
+      get_api();
+    });
   } catch(e){
     console.log("Error : ", e);
   }
@@ -53,7 +60,6 @@ function get_api(){
       getDataTime();
 
       if(dataTime != DB_dataTime){
-        console.log('update');
         setBusanDataTime(dataTime);
         for(var i=0; i < parsedJson.response.body[0].totalCount[0]; i++){
           var cityName = parsedJson.response.body[0].items[0].item[i].cityName[0];
@@ -63,7 +69,7 @@ function get_api(){
           var no2Value = parsedJson.response.body[0].items[0].item[i].no2Value[0];
           var pm10Value  = parsedJson.response.body[0].items[0].item[i].pm10Value[0];
           var pm25Value  = parsedJson.response.body[0].items[0].item[i].pm25Value[0];
-          var caiValue = calcPM10CAI(pm10);
+          var caiValue = calcPM10CAI(pm10Value);
           setBusan(cityName, so2Value, coValue, o3Value, no2Value, pm10Value, pm25Value, caiValue);
         }
       }else{
@@ -84,7 +90,7 @@ function setBusanDataTime(datatime){
 }
 
 function setBusan(cityName, so2, co, o3, no2, pm10, pm25, cai){
-  firebase.database().ref('부산/airQuality' + cityName).set({
+  firebase.database().ref('부산/airQuality/' + cityName).set({
       caiValue : cai,
       coValue : co,
       no2Value : no2,
@@ -93,17 +99,18 @@ function setBusan(cityName, so2, co, o3, no2, pm10, pm25, cai){
       pm25Value : pm25,
       so2Value : so2
   });
+  console.log('firebase updated');
 }
 
 function calcPM10CAI(pm10){
   var cai;
-  if(pm10>0 && pm10<30){
+  if(pm10>=0 && pm10<=30){
     cai = '좋음';
-  }else if(pm10>31 && pm10<50){
+  }else if(pm10>=31 && pm10<=50){
     cai = '보통';
-  }else if(pm10>50 && pm10<100){
+  }else if(pm10>=51 && pm10<=100){
     cai = '나쁨';
-  }else if(pm10>100){
+  }else if(pm10>101){
     cai = '매우나쁨';
   }
   return cai;
