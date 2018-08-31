@@ -110,7 +110,7 @@ function calcPM10CAI(pm10){
 }
 
 function getDataTime() {
-  return firebase.database().ref('/부산/dataTime').once('value').then(function(snapshot) {
+  return firebase.database().ref('/부산/airQuality/dataTime').once('value').then(function(snapshot) {
     DB_dataTime = (snapshot.val());
   });
 }
