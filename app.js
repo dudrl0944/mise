@@ -63,7 +63,8 @@ function get_api(){
           var no2Value = parsedJson.response.body[0].items[0].item[i].no2Value[0];
           var pm10Value  = parsedJson.response.body[0].items[0].item[i].pm10Value[0];
           var pm25Value  = parsedJson.response.body[0].items[0].item[i].pm25Value[0];
-          setBusan(cityName, so2Value, coValue, o3Value, no2Value, pm10Value, pm25Value, '좋음');
+          var caiValue = calcPM10CAI(pm10);
+          setBusan(cityName, so2Value, coValue, o3Value, no2Value, pm10Value, pm25Value, caiValue);
         }
       }else{
         console.log('no update');
@@ -77,13 +78,13 @@ function get_api(){
 }
 
 function setBusanDataTime(datatime){
-  firebase.database().ref('부산').set({
+  firebase.database().ref('부산/airQuality').set({
       dataTime : datatime
   });
 }
 
 function setBusan(cityName, so2, co, o3, no2, pm10, pm25, cai){
-  firebase.database().ref('부산/' + cityName).set({
+  firebase.database().ref('부산/airQuality' + cityName).set({
       caiValue : cai,
       coValue : co,
       no2Value : no2,
@@ -92,6 +93,20 @@ function setBusan(cityName, so2, co, o3, no2, pm10, pm25, cai){
       pm25Value : pm25,
       so2Value : so2
   });
+}
+
+function calcPM10CAI(pm10){
+  var cai;
+  if(pm10>0 && pm10<30){
+    cai = '좋음';
+  }else if(pm10>31 && pm10<50){
+    cai = '보통';
+  }else if(pm10>50 && pm10<100){
+    cai = '나쁨';
+  }else if(pm10>100){
+    cai = '매우나쁨';
+  }
+  return cai;
 }
 
 function getDataTime() {
